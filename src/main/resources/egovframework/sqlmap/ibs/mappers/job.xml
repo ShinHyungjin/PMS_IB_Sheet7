@@ -1,0 +1,803 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ibs.com.mapper.JobMapper">
+ <!-- 주영 반환타입========================================================================== -->
+<sql id="search">
+   <trim prefixOverrides="OR" prefix="(" suffix=") AND">
+      <foreach collection="typeArr" item="type">
+         <trim prefix="OR">
+            <choose>
+               <when test="type == 'T'.toString()">title like '%'||#{keyword}||'%'</when>
+               <when test="type == 'C'.toString()">content like '%'||#{keyword}||'%'</when>
+               <when test="type == 'W'.toString()">writer like '%'||#{keyword}||'%'</when>
+            </choose>
+         </trim>
+      </foreach>
+   </trim>
+
+</sql>
+
+      <resultMap id="jobVO" type="ibs.com.domain.JobVO">
+            <result property="id" column="id"/>
+            <result property="project_id" column="project_id"/>
+            <result property="job_id" column="job_id"/>
+            <result property="order_id" column="order_id"/>
+            <result property="privacy_state" column="privacy_state"/>
+            <result property="week" column="week"/>
+            <result property="deep" column="deep"/>
+            <result property="name" column="name"/>
+            <result property="manager" column="manager"/>
+            <result property="report" column="report"/>
+            <result property="work_type" column="work_type"/>
+            <result property="work_detail_type" column="work_detail_type"/>
+            <result property="work_division" column="work_division"/>
+            <result property="comment" column="comment"/>
+            <result property="contents" column="contents"/>
+            <result property="parent" column="parent"/>
+            <result property="start_date" column="start_date"  />
+            <result property="end_date" column="end_date" />
+            <result property="real_start_date" column="real_start_date"/>
+            <result property="real_end_date" column="real_end_date"/>
+            <result property="total_one_md" column="total_one_md"/>
+            <result property="plan_one_md" column="plan_one_md"/>
+            <result property="total_date" column="total_date"/>
+            <result property="plan_date" column="plan_date"/>
+            <result property="plan_progress" column="plan_progress"/>
+            <result property="real_progress" column="real_progress"/>
+            <result property="hide" column="hide"/>
+            <result property="sub_cnt" column="sub_cnt"/>
+            <result property="wbs_id" column="wbs_id"/>
+            <result property="this_week_plan" column="this_week_plan"/>
+            <result property="next_week_plan" column="next_week_plan"/>
+             <collection property="project" resultMap="projectVO" />
+             <collection property="wbs" resultMap="wbsVO" />
+         </resultMap>
+   
+        <resultMap id="wbsVO" type="ibs.com.domain.WbsVO" >
+         <result property="id" column="id"/>
+          <result property="name" column="name"/>
+          <result property="start_date" column="start_date"/>
+         <result property="end_date" column="end_date"/>
+     
+   </resultMap>
+   
+   
+     <resultMap id="projectVO" type="ibs.com.domain.ProjectVO" >
+         <result property="p_id" column="id"/>
+          <result property="project_title" column="project_title"/>
+          <result property="project_nickname" column="project_nickname"/>
+         <result property="start_date" column="start_date"/>
+            <result property="end_date" column="end_date"/>
+          <result property="context" column="context"/>
+          <result property="manager" column="manager"/>
+          <result property="name" column="name"/>
+          <result property="department" column="department"/>
+          <result property="rank" column="rank"/>
+          
+   </resultMap>
+   
+   
+        <resultMap id="memberVO" type="ibs.com.domain.MemberVO" >
+         <result property="id" column="id"/>
+          <result property="project_id" column="project_id"/>
+          <result property="user_id" column="user_id"/>
+         <result property="group_id" column="group_id"/>
+   </resultMap>
+   
+<!--    <resultMap id="userVO" type="ibs.com.domain.UserVO">
+      <id property="id" column="id"/>
+      <result property="id" column="id"/>
+      <result property="password" column="password"/>
+      <result property="name" column="name"/>
+      <result property="email" column="email"/>
+      <result property="phone" column="phone"/>
+      <result property="department" column="department"/>
+      <result property="rank" column="rank"/>
+      <result property="type" column="type"/>
+      <collection property="authList" resultMap="authMap"/>
+   </resultMap>    
+   
+     <resultMap id="authMap" type="ibs.com.domain.AuthVO" >
+      <result property="id" column="id"/>   
+      <result property="authority" column="authority"/>
+   </resultMap>     
+ -->
+ 
+ <!-- 주영 반환타입 끝========================================================================== --> 
+ <!-- 형진 반환타입=================================================================== -->
+<!--  <resultMap id="CommonVO" type="ibs.com.domain.CommonVO" >
+         <result property="id" column="id"/>
+         <result property="name" column="name"/>
+   </resultMap> -->
+ 
+ <resultMap id="Job" type="map">
+      <result property="id" column="id"/>
+      <result property="project_id" column="project_id"/>
+      <result property="manager" column="manager" />
+      <result property="name" column="name" />
+      <result property="start_date" column="start_date" javaType="java.sql.Date" jdbcType="DATE"/>
+      <result property="end_date" column="end_date" javaType="java.sql.Date" jdbcType="DATE"/>
+      <result property="real_progress" column="real_progress" javaType="Float" />
+      <result property="parent" column="parent" />
+      <result property="comment" column="comment" />
+      <result property="contents" column="contents" />
+      <result property="work_type" column="work_type" />
+      <result property="work_detail_type" column="work_detail_type" />
+      <result property="work_division" column="work_division" />
+      <result property="real_start_date" column="real_start_date" javaType="java.sql.Date" jdbcType="DATE"/>
+      <result property="real_end_date" column="real_end_date" javaType="java.sql.Date" jdbcType="DATE"/>
+   </resultMap>
+ <!-- 형진 반환타입 끝=================================================================== -->
+
+ <!-- 주영 쿼리====================================================================================== -->
+<select id="getMyProjectIdByProjectTitle" resultType="int">
+   SELECT IFNULL(id,0) FROM PROJECT WHERE PROJECT_TITLE=#{project_title} and PROJECT_NICKNAME=#{project_nickname} and START_DATE=#{start_date} and END_DATE=#{end_date}
+</select> 
+<select id="getMyJobById" resultType="Hashmap">
+   SELECT PROJECT_TITLE ,PROJECT_NICKNAME, ID AS PROJECT_ID
+   FROM PROJECT 
+   WHERE ID IN (
+            SELECT PROJECT_ID FROM PROJECT_MEMBER 
+            WHERE USER_ID = #{userid} 
+            ) 
+   
+</select>
+
+<select id="getMyJobByState" resultType="Hashmap">
+   SELECT PROJECT_TITLE ,PROJECT_NICKNAME, STATE, ID AS PROJECT_ID
+   FROM PROJECT 
+   WHERE ID IN (
+            SELECT PROJECT_ID FROM PROJECT_MEMBER 
+            WHERE USER_ID = #{userid} and STATE = #{state}
+            ) 
+   
+</select>
+
+<select id="getMyJobById2" resultType="map">
+   select ID, PROJECT_TITLE, PROJECT_NICKNAME, START_DATE, END_DATE, CONTEXT, STATE, MANAGER, (select name from USER WHERE ID=MANAGER)as NAME
+    from PROJECT
+    WHERE ID IN (
+            SELECT PROJECT_ID FROM PROJECT_MEMBER 
+            WHERE USER_ID = #{userid}
+            ) 
+   ORDER BY FIELD(STATE, 112, 111, 113, 110)ASC, PROJECT_TITLE ASC, START_DATE ASC;
+</select>
+
+
+<select id="getMystate" parameterType="map" resultType="map">
+   select ID, PROJECT_TITLE, PROJECT_NICKNAME, START_DATE, END_DATE, CONTEXT, STATE, MANAGER, (select name from USER WHERE ID=MANAGER)as NAME, TEAM, PAYMENT
+    from PROJECT
+    WHERE ID IN (
+            SELECT PROJECT_ID FROM PROJECT_MEMBER 
+            WHERE USER_ID = #{userid} AND STATE = #{state}
+            ) 
+</select>
+
+<select id="getMystate2" resultMap="projectVO">
+   select ID, PROJECT_TITLE, PROJECT_NICKNAME, START_DATE, END_DATE, CONTEXT, STATE, MANAGER, (select name from USER WHERE ID=MANAGER)as NAME
+    from PROJECT
+    WHERE ID IN (
+            SELECT PROJECT_ID FROM PROJECT_MEMBER 
+            WHERE USER_ID = #{userid}
+            ) 
+</select>
+
+  <!-- select ID, PROJECT_TITLE, PROJECT_NICKNAME, START_DATE, END_DATE, CONTEXT, STATE, MANAGER,
+	(select name from USER WHERE ID=MANAGER)as NAME,
+	(select RANK from USER WHERE ID=MANAGER)as RANK,
+	(select name from COMMON where id= (select DEPARTMENT from USER WHERE ID=MANAGER))as DEPARTMENT
+	from PROJECT where ID=#{p_id} -->
+
+<select id="getProjectInfoByProjectId" resultMap="projectVO">
+	select p.ID, p.PROJECT_TITLE, p.PROJECT_NICKNAME, p.START_DATE, p.END_DATE, p.CONTEXT, p.STATE, p.MANAGER, p.TEAM, p.PAYMENT, u.rank, u.name,
+	(select name from COMMON where ID=u.DEPARTMENT) as department
+	from PROJECT p left join USER u on(p.MANAGER=u.ID)
+	where p.id= #{p_id}
+</select>    
+
+<select id="getMyProjectInfo" resultType="jobVO">
+	select PROJECT_TITLE,PROJECT_NICKNAME from PROJECT
+	where ID in(
+	select DISTINCT(PROJECT_ID) from JOB where MANAGER=(select name from USER where id=#{id}))
+</select>
+
+<select id="getAllMyJob" resultType="jobVO" >
+   SELECT J.ID,J.NAME, J.PROJECT_ID, 
+      J.MANAGER, J.REAL_START_DATE, 
+       J.REAL_END_DATE, J.REPORT, J.REAL_PROGRESS,
+       J.PRIVACY_STATE,
+       P.STATE, P.PROJECT_TITLE, P.PROJECT_NICKNAME 
+       
+   FROM JOB J left join PROJECT P on (J.PROJECT_ID =P.ID) 
+   WHERE J.MANAGER = #{userid}
+   <!--  <if test='project_title neq "0" or project_title neq "전체".toString() '>
+                  AND J.PROJECT_ID =(
+                                  SELECT PROJECT_ID
+                                  FROM PROJECT
+                                     WHERE PROJECT_TITLE=#{project_title}
+                                  ) 
+                  </if> -->
+<!--    <if test='project_title!="null" and project_title!="0".toString()'>
+      AND P.project_title=#{project_title}
+   </if> -->
+
+   
+<!-- SELECT J.ID ,J.DEEP ,J.PROJECT_ID,J.NAME, J.start_date, J.END_DATE ,J.TOTAL_ONE_MD,
+      J.PLAN_ONE_MD, J.TOTAL_DATE, J.PLAN_DATE, J.MANAGER, J.REAL_START_DATE, 
+       J.REAL_END_DATE, J.REPORT, J.PLAN_PROGRESS, J.REAL_PROGRESS, J.JOB_ID,
+       P.STATE, P.PROJECT_TITLE, P.PROJECT_NICKNAME 
+       
+   FROM JOB J,PROJECT P
+   WHERE J.MANAGER = (
+                SELECT  NAME FROM USER 
+                WHERE ID = "shinhyungjin"
+                )
+   AND J.PROJECT_ID =P.ID     -->
+</select>
+
+
+<!--    
+ 검색어 조건 쿼리 
+SELECT J.ID ,J.DEEP ,J.PROJECT_ID,J.NAME, J.start_date, J.END_DATE ,J.TOTAL_ONE_MD,
+      J.PLAN_ONE_MD, J.TOTAL_DATE, J.PLAN_DATE, J.MANAGER, J.REAL_START_DATE, 
+       J.REAL_END_DATE, J.REPORT, J.PLAN_PROGRESS, J.REAL_PROGRESS, J.JOB_ID,
+       J.PRIVACY_STATE,
+       P.STATE, P.PROJECT_TITLE, P.PROJECT_NICKNAME 
+       
+   FROM JOB J left join PROJECT P on (J.PROJECT_ID =P.ID) 
+   WHERE J.MANAGER = (
+                SELECT  NAME FROM USER U
+                WHERE U.ID = "shinhyungjin"
+                ) AND J.PROJECT_ID =(
+                                  SELECT PROJECT_ID
+                                  FROM PROJECT
+                                     WHERE PROJECT_TITLE="IB 항공실시간정보공유 시스템"
+                                  ) -->
+
+
+<!-- 진행전 -->
+<select id="getBeforeMyJobById" parameterType="hashmap" resultMap="jobVO" >
+ SELECT J.PROJECT_ID,J.ID, J.NAME, J.MANAGER, J.REAL_START_DATE, J.WBS_ID,
+       J.REAL_END_DATE, J.REPORT, J.REAL_PROGRESS, J.WEEK,
+       J.PRIVACY_STATE, J.PARENT,
+       P.STATE, P.PROJECT_TITLE, P.PROJECT_NICKNAME, (select count(*) from JOB B WHERE PARENT=J.ID)AS SUB_CNT, W.order_id
+       
+   FROM JOB J left join PROJECT P on (J.PROJECT_ID =P.ID) LEFT JOIN WBS W ON(J.WBS_ID=W.ID)
+   WHERE J.MANAGER = #{userid} and J.PRIVACY_STATE=111 AND J.PARENT=0
+                <choose>
+                <when test='project_title != "0" and project_title != "1" and project_title != "2" ' >
+                and P.PROJECT_TITLE=#{project_title}
+                </when>
+                 <when test='project_title == "1"'>
+                and P.PROJECT_TITLE IS NULL
+                </when>
+                </choose>
+               ORDER BY J.REAL_END_DATE ASC;
+</select>
+<!-- 진행중 -->
+<select id="getIngMyJobById" resultMap="jobVO" >
+   SELECT J.ID,J.NAME,J.PROJECT_ID, J.WBS_ID, 
+     J.MANAGER, J.REAL_START_DATE, 
+       J.REAL_END_DATE, J.REPORT,J.REAL_PROGRESS, J.WEEK,
+       J.PRIVACY_STATE, J.PARENT,
+       P.STATE, P.PROJECT_TITLE, P.PROJECT_NICKNAME,(select count(*) from JOB B WHERE PARENT=J.ID)AS SUB_CNT, W.order_id
+       
+   FROM JOB J left join PROJECT P on (J.PROJECT_ID =P.ID) LEFT JOIN WBS W ON(J.WBS_ID=W.ID)
+   WHERE J.MANAGER = #{userid} and J.PRIVACY_STATE=112 AND J.PARENT=0
+   
+              <choose>
+              
+                <when test='project_title neq "0" and project_title neq "1" and project_title neq "2" ' >
+                and P.PROJECT_TITLE=#{project_title}
+                </when>
+                 <when test='project_title == "1"'>
+                and P.PROJECT_TITLE IS NULL
+                </when>
+                </choose> 
+                ORDER BY J.REAL_END_DATE ASC;
+</select>
+<!-- 2개월 전의 완료 -->
+<select id="getEndMyJobByIdBefore2Months" resultMap="jobVO" >
+   SELECT J.ID ,J.NAME,J.PROJECT_ID, J.WBS_ID,
+      J.MANAGER, J.REAL_START_DATE, 
+       J.REAL_END_DATE, J.REPORT, J.REAL_PROGRESS, J.WEEK,
+       J.PRIVACY_STATE, J.PARENT,
+       P.STATE, P.PROJECT_TITLE, P.PROJECT_NICKNAME ,(select count(*) from JOB B WHERE PARENT=J.ID)AS SUB_CNT, W.order_id
+       
+   FROM JOB J left join PROJECT P on (J.PROJECT_ID =P.ID) LEFT JOIN WBS W ON(J.WBS_ID=W.ID)
+   WHERE J.MANAGER = #{userid} and J.PRIVACY_STATE=113 AND J.PARENT=0
+                  <choose>
+              <when test='project_title neq "0" and project_title neq "1" and project_title neq "2" ' >
+                and P.PROJECT_TITLE=#{project_title}
+                </when>
+                 <when test='project_title == "1"'>
+                and P.PROJECT_TITLE IS NULL
+                </when>
+                </choose>
+               and J.real_end_date <![CDATA[ > ]]> #{twoMonthsAgo} 
+              ORDER BY J.REAL_END_DATE ASC;
+</select>
+
+<!-- 완료 -->
+<select id="getEndMyJobById" resultMap="jobVO" >
+   SELECT J.ID ,J.NAME,J.PROJECT_ID, J.WBS_ID,
+     J.MANAGER, J.REAL_START_DATE, 
+       J.REAL_END_DATE, J.REPORT,J.REAL_PROGRESS, J.WEEK,
+       J.PRIVACY_STATE, J.PARENT,
+       P.STATE, P.PROJECT_TITLE, P.PROJECT_NICKNAME ,(select count(*) from JOB B WHERE PARENT=J.ID)AS SUB_CNT, W.order_id
+       
+   FROM JOB J left join PROJECT P on (J.PROJECT_ID =P.ID) LEFT JOIN WBS W ON(J.WBS_ID=W.ID)
+   WHERE J.MANAGER =  #{userid} and J.PRIVACY_STATE=113 AND J.PARENT=0
+                  <choose>
+              <when test='project_title neq "0" and project_title neq "1" and project_title neq "2" ' >
+                and P.PROJECT_TITLE=#{project_title}
+                </when>
+                 <when test='project_title == "1"'>
+                and P.PROJECT_TITLE IS NULL
+                </when>
+                </choose>
+                ORDER BY J.REAL_END_DATE ASC;
+             
+</select>
+<!-- 진행전 -->
+<select id="getStopMyJobById" parameterType="hashmap" resultMap="jobVO" >
+ SELECT J.ID ,J.NAME,J.PROJECT_ID, J.WBS_ID,
+    J.MANAGER, J.REAL_START_DATE,
+       J.REAL_END_DATE, J.REPORT,J.REAL_PROGRESS, J.WEEK,
+       J.PRIVACY_STATE, J.PARENT,
+       P.STATE, P.PROJECT_TITLE, P.PROJECT_NICKNAME, (select count(*) from JOB B WHERE PARENT=J.ID)AS SUB_CNT, W.order_id
+       
+   FROM JOB J left join PROJECT P on (J.PROJECT_ID =P.ID) LEFT JOIN WBS W ON(J.WBS_ID=W.ID)
+   WHERE J.MANAGER = #{userid} and J.PRIVACY_STATE=110  AND J.PARENT=0
+                <choose>
+                 <when test='project_title neq "0" and project_title neq "1" and project_title neq "2" ' >
+                and P.PROJECT_TITLE=#{project_title}
+                </when>
+                 <when test='project_title == "1"'>
+                and P.PROJECT_TITLE IS NULL
+                </when>
+                </choose>
+                ORDER BY J.REAL_END_DATE ASC;
+</select>
+
+
+<!-- 동일이름일 경우 다른 프로젝트가 출력되는 경우예비 쿼리 
+위에껀 유저 이름으로 매핑되지만 추후 리펙토링에서는 id값으로 매핑을 시켜줄 예정임
+-->
+       
+   <!--  select * from USER a,(
+    SELECT J.ID ,J.DEEP ,J.PROJECT_ID,J.NAME, J.start_date, J.END_DATE ,J.TOTAL_ONE_MD,
+      J.PLAN_ONE_MD, J.TOTAL_DATE, J.PLAN_DATE, J.MANAGER, J.REAL_START_DATE, 
+       J.REAL_END_DATE, J.REPORT, J.PLAN_PROGRESS, J.REAL_PROGRESS, J.JOB_ID,
+       J.PRIVACY_STATE,
+       P.STATE, P.PROJECT_TITLE, P.PROJECT_NICKNAME
+       
+   FROM JOB J left join PROJECT P on (J.PROJECT_ID =P.ID) 
+   WHERE J.MANAGER = (
+                SELECT id FROM USER U
+                WHERE U.ID = "#{userid}"
+                )and J.PRIVACY_STATE=113)b
+                where a.ID=b.manager  -->
+
+
+<!-- wbs와는 상관 없는 나만의 개인 상위 job 추가하기 -->
+<insert id="registerMyJobByMySelf" >
+  insert into JOB(project_id,name,manager,work_type, work_detail_type, work_division, contents,real_start_date, real_end_date,week,privacy_state,real_progress,comment)
+  values(#{project_id},#{name},#{manager},#{work_type},#{work_detail_type},#{work_division},#{contents},#{start_date},#{end_date}, #{week},#{privacy_state},#{real_progress},#{comment})
+</insert>
+
+<insert id="addNewProject">
+insert into PROJECT(project_title,project_nickname,start_date,end_date,context,state,manager, team, payment)
+values(#{project_title},#{project_nickname},#{start_date},#{end_date},#{context},#{state},#{manager}, #{team}, #{payment})
+</insert>
+
+
+<!-- wbs와는 상관 없는 나만의 개인 상위에 대한 하위 job 추가하기 -->
+<insert id="registerMySubJobByMySelf" >
+  insert into JOB(this_week_plan,next_week_plan,project_id,manager,name, work_type, work_detail_type, work_division, contents, real_start_date, real_end_date, parent, week,real_progress,privacy_state)
+  values(#{this_week_plan},#{next_week_plan},#{project_id},#{manager},#{name},#{work_type},#{work_detail_type},#{work_division},#{contents},#{real_start_date},#{real_end_date},#{parent},#{week},#{real_progress},#{privacy_state})
+</insert>
+
+<!-- job의 진행전 개수 출력 -->
+<select id="beforeMyJobCntById" resultType="int">
+   SELECT COUNT(*) cnt 
+   FROM JOB J left join PROJECT P on (J.PROJECT_ID =P.ID) 
+   WHERE J.MANAGER = #{userid} and J.PRIVACY_STATE=111 and J.PARENT=0
+                <choose>
+                 <when test='project_title != "0" and project_title != "1" and project_title != "2" ' >
+                and P.PROJECT_TITLE=#{project_title}
+                </when>
+                 <when test='project_title == "1"'>
+                and P.PROJECT_TITLE IS NULL
+                </when>
+                </choose>
+</select>
+
+<!-- 시작못한 일 -->
+<select id="beforeMylastCnt" resultType="int">
+   <!-- SELECT COUNT(*) cnt 
+      FROM JOB J left join PROJECT P on (J.PROJECT_ID =P.ID) 
+      <![CDATA[ WHERE J.MANAGER = #{userid} and J.PRIVACY_STATE=111 and J.PARENT=0
+      and J.real_start_date < date_format(NOW(),'%Y%m%d')]]> -->
+      SELECT COUNT(*) cnt 
+   FROM JOB J left join PROJECT P on (J.PROJECT_ID =P.ID) 
+   WHERE J.MANAGER = #{userid} and J.PRIVACY_STATE=111 and J.PARENT=0
+</select>
+
+<!-- 못끝낸일 -->
+<select id="ingMylastCnt" resultType="int">
+   <!-- SELECT COUNT(*) cnt 
+      FROM JOB J left join PROJECT P on (J.PROJECT_ID =P.ID) 
+      <![CDATA[ WHERE J.MANAGER = #{userid} and J.PRIVACY_STATE=112 and J.PARENT=0
+      and J.real_end_date < date_format(NOW(),'%Y%m%d')]]> -->
+      SELECT COUNT(*) cnt 
+   FROM JOB J left join PROJECT P on (J.PROJECT_ID =P.ID) 
+   WHERE J.MANAGER = #{userid} and J.PRIVACY_STATE=112 and J.PARENT=0
+</select>
+
+
+
+<!-- job의 진행중 개수 출력 -->
+<select id="ingMyJobCntById" resultType="int">
+   SELECT COUNT(*) cnt 
+   FROM JOB J left join PROJECT P on (J.PROJECT_ID =P.ID) 
+   WHERE J.MANAGER = #{userid} and J.PRIVACY_STATE=112 and J.PARENT=0
+                   <choose>
+                 <when test='project_title != "0" and project_title != "1" and project_title != "2" ' >
+                and P.PROJECT_TITLE=#{project_title}
+                </when>
+                 <when test='project_title == "1"'>
+                and P.PROJECT_TITLE IS NULL
+                </when>
+                </choose>
+
+</select>
+<!-- job의 완료 개수 출력 -->
+<select id="endMyJobCntById" resultType="int">
+   SELECT COUNT(*) cnt 
+   FROM JOB J left join PROJECT P on (J.PROJECT_ID =P.ID) 
+   WHERE J.MANAGER =  #{userid} and J.PRIVACY_STATE=113 and J.PARENT=0
+                  <choose>
+                 <when test='project_title != "0" and project_title != "1" and project_title != "2" ' >
+                and P.PROJECT_TITLE=#{project_title}
+                </when>
+                 <when test='project_title == "1"'>
+                and P.PROJECT_TITLE IS NULL
+                </when>
+                </choose>
+                and J.real_end_date BETWEEN #{twoMonthsAgo} and #{todayYearMonthDays}
+</select>
+<!-- 부모키로 자식있는지 확인하기 -->
+<select id="checkSubJobByParent" resultType="jobVO">
+select IFNULL(id,null)as id from JOB WHERE parent=#{parent}
+</select>
+<!-- 내 부모 아이디 가져오기 -->
+<select id="selectMyParentIdByJobInfo" resultType="Integer">
+select id from JOB where name=#{name}
+ and work_type=#{work_type}
+ and contents=#{contents}
+ and work_detail_type=#{work_detail_type} 
+ and work_division=#{work_division}
+ and manager = #{manager}
+</select>
+<!-- 부모 아이디로 자식 정보 모두 지우기 -->
+<delete id="removeSubInfoByParentId">
+   delete from JOB where PARENT=#{parent}
+</delete>
+
+<!-- 부모 아이디로 자식 정보 찾기 -->
+<select id="selectSubJobInfoByParentId" resultMap="jobVO">
+select name, contents, real_start_date, real_end_date,  week, real_progress, privacy_state from JOB where PARENT=#{parent};
+</select>
+
+<!-- job id 로 모든 정보 출력하기 -->   
+<select id="selectOneMyJobById" resultMap="jobVO">
+select w.ID AS wbs_id, J.NAME AS name, w.START_DATE AS start_date , w.END_DATE AS end_date,J.ID AS id, J.REAL_START_DATE AS real_start_date, J.REAL_END_DATE AS real_end_date
+, J.REAL_PROGRESS AS REAL_PROGRESS, J.WEEK AS WEEK, J.PRIVACY_STATE AS PRIVACY_STATE,J.WORK_TYPE AS work_type, J.WORK_DETAIL_TYPE AS work_detail_type, 
+p.PROJECT_TITLE AS project_title, J.CONTENTS AS contents, J.COMMENT AS comment
+from JOB J left join PROJECT p on(J.PROJECT_ID=p.ID) LEFT JOIN WBS w ON(J.WBS_ID=w.ID) where J.ID =#{id};
+</select>
+
+<select id="selectOneMyJob_ById" resultMap="jobVO">
+     select *  from JOB J,PROJECT P where J.PROJECT_ID =P.ID AND J.ID =#{id}
+</select>
+
+<!-- job id로 나의 상.하위 작업 삭제 -->
+<delete id="deleteMyJobByJobId">
+delete FROM JOB WHERE ID=#{id} OR PARENT=#{id}
+</delete>
+
+<!-- 내작업 상위 수정하기 -->
+<update id="modifyMyJobByJobId">
+   update JOB
+   set this_week_plan=#{this_week_plan},next_week_plan=#{next_week_plan},name=#{name}, real_start_date=#{real_start_date}, real_end_date=#{real_end_date},project_id=#{project_id},
+             work_type=#{work_type} , work_detail_type=#{work_detail_type} , work_division=#{work_division} ,real_progress=#{real_progress}, 
+            privacy_state=#{privacy_state} , week=#{week} , contents=#{contents} , comment=#{comment} 
+   where id= #{id}
+</update>
+
+<!-- 내작업 하위 수정하기 -->
+<update id="modifyMySubJobByJobId">
+   update JOB
+   set name=#{name}, real_start_date=#{real_start_date}, real_end_date=#{real_end_date},
+             work_type=#{work_type} , work_detail_type=#{work_detail_type} , work_division=#{work_division} ,real_progress=#{real_progress}, 
+             week=#{week} , contents=#{contents} 
+   where id= #{id}
+</update>
+<update id="updateJobsDateWhenProjectIsChange">
+UPDATE JOB SET START_DATE=#{start_date}, END_DATE=#{end_date} WHERE NAME=#{project_title} AND PROJECT_ID=#{p_id}
+</update>
+
+
+
+<!-- 프로젝트 수정 -->
+<update id="modifyProjectInfo">
+ update PROJECT
+ set manager=#{manager}, project_title=#{project_title}, project_nickname=#{project_nickname}, start_date=#{start_date}, end_date=#{end_date}, state=#{state}, 
+      context=#{context}, team=#{team}, payment=#{payment}
+ where id=#{p_id}   
+</update>
+<!--1.프로젝트가 수정될때 담당자 변경시 기존 담당자의 권한삭제  -->
+<delete id="deletePmAuthByProjectChanged">
+delete from PROJECT_MEMBER WHERE group_id=2 and project_id=#{p_id}
+</delete>
+<!--1.1.프로젝트가 수정될때 담당자 변경시 담당자로 지정될분이 해당 프로젝트의 팀원이였으면 그에대한 권한을 미리 삭제시켜준다. -->
+<delete id="deletePmAuthByProjectChangedByName">
+delete from PROJECT_MEMBER WHERE user_id={manager} and project_id=#{p_id}
+</delete>
+<!-- 2.변경된 담당자의 기존에 있던 권한을 삭제해준다. -->
+<delete id="deleteTargetUserAuth">
+delete from PROJECT_MEMBER WHERE USER_ID=#{manager}and project_id=#{p_id}
+</delete>
+
+<!-- PM이 변경될시 2개의 PM권한이 존재후 이전PM의 권한을 삭제시킨다, -->
+<delete id="deleteBeforePmAuth">
+DELETE FROM PROJECT_MEMBER WHERE PROJECT_ID=#{p_id} AND GROUP_ID=2 AND USER_ID NOT LIKE CONCAT('%',#{manager},'%')
+</delete>
+
+<!--3. 2번이후 새로운 담당자의 권한 등록-->
+<insert id="insertPmAuthWhenProjectChanged">
+insert into PROJECT_MEMBER(project_id, user_id, group_id) VALUES(#{p_id}, #{manager}, 2)
+</insert>
+
+<!-- 내권한을 먼저 바꾼다. -->
+<update id="changeMyProjectAuth">
+update PROJECT_MEMBER SET group_id=2  where project_id=#{p_id} and user_id=#{manager}
+</update>
+
+<!-- 내작업 삭제시 상하위 둘다 삭제됨 -->
+<delete id="removeMyJobByJobId">      
+   delete from JOB WHERE ID=#{id} OR PARENT=#{id}
+</delete>
+
+<!--프로젝트의 팀원이 pm으로 된경우 아이디와 프로젝트 아이디를 조회하여 삭제시켜주기 위해서 필요  -->
+<select id="getProjectAuthWhenProjectUpDateById" resultMap="memberVO">
+   select * from PROJECT_MEMBER WHERE USER_ID=#{manager} AND PROJECT_ID=#{p_id}
+</select>
+
+<!-- 주간보고서 뽑기 -->
+   <select id="getAllWeekReport" resultMap="jobVO">
+      SELECT *
+   FROM JOB J left join PROJECT P on (J.PROJECT_ID =P.ID) 
+   WHERE J.WEEK=1 and J.MANAGER IS NOT NULL AND (
+      (J.REAL_START_DATE BETWEEN  ( '2021-10-25')  AND ( '2021-11-06' ) )
+      OR
+      (J.REAL_END_DATE BETWEEN  ( '2021-10-25' ) AND ( '2021-11-06' ) )
+   )
+</select>
+   
+<!-- 프로젝트 생성시 할당된 담당자 권한을 project_member테이블에 추가 -->
+<insert id="addProjectMemberAuth">
+insert into PROJECT_MEMBER(group_id, user_id, project_id) values(2, #{user_id}, #{project_id})
+</insert>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- =============================형진 쿼리================================================================ -->
+   
+   <!-- 나와 같은 부서 소속원들의 주간보고서 가져오기 -->
+   <select id="selectWeekReportDept" resultMap="Job" parameterType="userVO">
+      select j.id, p.project_title as PROJECT_ID, j.order_id, j.manager, c.name as department, j.deep, j.name, j.start_date, j.end_date,
+             j.total_one_md, j.plan_one_md, j.total_date, j.plan_date, j.report, j.plan_progress, j.real_progress, j.week,
+             j.parent, j.comment, j.contents, j.work_type, j.work_detail_type, j.work_division, j.real_start_date, j.real_end_date
+      from JOB j JOIN PROJECT p
+      on j.project_id = p.id JOIN USER u
+      on j.manager = u.name JOIN COMMON c
+      on  u.department = c.id
+      where j.week = 1 and j.manager IN (select name from USER where department=#{department})
+      order by j.manager asc
+   </select>
+   
+   <!-- 
+   <select id="selectWeekReportDept" resultMap="Job" parameterType="userVO">
+   SELECT DISTINCT * FROM
+               (SELECT j.id, j.order_id, j.manager, j.deep, j.name, j.start_date, j.end_date,j.project_id,
+                      j.total_one_md, j.plan_one_md, j.total_date, j.plan_date, j.report, j.plan_progress, j.real_progress, j.week,
+                      j.parent, j.comment, j.contents, j.work_type, j.work_detail_type, j.work_division, j.real_start_date, j.real_end_date,u.DEPARTMENT 
+                   FROM JOB j LEFT JOIN USER u on(j.MANAGER=u.NAME))a, PROJECT b
+                   WHERE a.project_id=b.id
+  </select>
+   -->
+   
+   
+   <!-- 나와 같은 프로젝트를 진행한 사용자들의 주간보고서 가져오기 -->
+   <select id="selectWeekReportProject" resultMap="Job" parameterType="list">
+               select distinct(j.id), p.project_title as PROJECT_ID, j.order_id, j.manager, j.deep, j.name, j.start_date, j.end_date,
+                       j.total_one_md, j.plan_one_md, j.total_date, j.plan_date, j.report, j.plan_progress, j.real_progress, j.week,
+                       j.parent, j.comment, j.contents, j.work_type, j.work_detail_type, j.work_division, j.real_start_date, j.real_end_date
+               from JOB j LEFT JOIN PROJECT p
+               on j.project_id = p.id
+               where j.week = 1 and j.manager is not null and j.project_id in <foreach collection="list" item="item" index="index" open='(' close=')' separator="," >
+               #{item}
+            </foreach> 
+            order by j.manager asc
+   </select>
+   
+   <!-- 내가 소속된 프로젝트 리스트 가져오기 -->
+   <select id="getMyProjectIdList" parameterType="userVO" resultType="int">
+         select project_id
+         from PROJECT_MEMBER
+         where user_id = #{id}
+   </select>
+   
+   <!-- 클릭한 프로젝트의 WBS 가져오기 -->
+   <select id="selectWbs" resultMap="Job" parameterType="int">
+     select GROUP_CONCAT(j.id)as id, j.project_id, j.order_id, GROUP_CONCAT(j.manager)as manager, count(j.manager)as manager_count, j.deep, j.name, j.start_date, j.end_date,
+             j.total_one_md, j.plan_one_md, j.total_date, j.plan_date, j.report, j.plan_progress, avg(j.real_progress)as real_progress, j.week,
+             j.parent, j.comment, j.contents, j.work_type, j.work_detail_type, j.work_division, j.real_start_date, j.real_end_date, c.name as state
+       from JOB j JOIN PROJECT p
+       on j.project_id = p.id JOIN COMMON c
+       on p.state = c.id
+       where project_id=#{project_id} and hide = 1
+       group by order_id
+       order by order_id asc
+   </select>
+   
+   <!-- 클릭한 프로젝트의 전체 평균 실적 계산해서 가져오기 -->
+   <select id="selectProjectRealProgress" parameterType="int" resultType="float">
+       select avg(real_progress) as real_progress 
+       from JOB
+       where project_id = #{project_id}
+   </select>
+   
+   <!-- 클릭한 프로젝트의 소속 멤버들 가져오기 -->
+   <select id="selectProjectMember" parameterType="int" resultMap="Job">
+         select u.name as user_name, u.id as user_id, g.id as group_id, u.rank, c.name as department_name
+         from USER u join PROJECT_MEMBER pm
+         on u.id = pm.user_id JOIN PROJECT_GROUP g
+         on pm.group_id = g.id JOIN COMMON c
+         on u.department = c.id
+         where pm.project_id = #{project_id}
+         ORDER BY FIELD(pm.group_id, 2,1,3,5,6,7,4)ASC;
+   </select>
+   
+<!--    <select id="getMyJobById" resultType="Hashmap">
+      SELECT PROJECT_TITLE ,PROJECT_NICKNAME 
+      FROM PROJECT 
+      WHERE ID IN (
+               SELECT PROJECT_ID FROM PROJECT_MEMBER 
+               WHERE USER_ID = #{id} 
+               )
+   </select> -->
+   
+   <!-- WBS 편집 후 Insert 대상 List 추가하기 -->
+   <insert id="insertWbsList" parameterType="list">
+      INSERT INTO JOB(PROJECT_ID, ORDER_ID, DEEP, START_DATE, END_DATE, REAL_START_DATE, REAL_END_DATE, NAME, MANAGER, REPORT, WEEK,
+                        TOTAL_ONE_MD, PLAN_ONE_MD, TOTAL_DATE, PLAN_DATE, PLAN_PROGRESS, REAL_PROGRESS, PRIVACY_STATE, HIDE)
+      VALUES
+       <foreach collection="list" item="item" separator="," >
+             (#{item.project_id}, #{item.order_id}, #{item.deep}, #{item.start_date}, #{item.end_date}, 
+             #{item.start_date}, #{item.end_date}, #{item.name}, #{item.manager}, #{item.report}, #{item.week}, #{item.total_one_md}, 
+             #{item.plan_one_md}, #{item.total_date}, #{item.plan_date}, #{item.plan_progress}, #{item.real_progress}, #{item.privacy_state}, #{item.hide})
+      </foreach>
+   </insert>
+   
+   <!-- WBS 편집 후 Delete 대상 List 삭제하기 -->
+   <delete id="deleteWbsList" parameterType="list">
+      DELETE FROM JOB 
+      <where>
+         <foreach collection="list" item="item" separator="OR">
+              (MANAGER = #{item.manager} AND ORDER_ID = #{item.order_id})
+         </foreach>
+      </where>
+   </delete>
+   
+   <!-- WBS 편집 후 Update 대상 List 갱신하기 -->
+   <update id="updateWbsList" parameterType="list">
+      <foreach collection="list" index="index" item="item" separator=";">
+         UPDATE JOB
+         SET DEEP =#{item.deep}
+            , START_DATE =#{item.start_date}
+            , END_DATE =#{item.end_date}
+            , NAME =#{item.name}
+            , MANAGER =#{item.manager}
+            , REPORT =#{item.report}
+            , PRIVACY_STATE =#{item.privacy_state}
+            WHERE ORDER_ID =#{item.order_id} AND MANAGER =#{item.manager}
+      </foreach>
+   </update>
+   
+   <select id="selectJobByWbsId" parameterType="int" resultMap="Job">
+         SELECT * FROM JOB WHERE WBS_ID = #{wbs_id}
+   </select>
+   
+   <!-- WBS 편집 후 Update 대상 중 Insert, Delete, Update 대상 판별하기 위해 같은 Order Id, Project Id인 Job 가져오기 -->
+   <!-- 
+   <select id="selectByOrderProjectId" resultMap="jobVO" parameterType="map">
+      select id as ID, project_id, order_id, manager, deep, name, start_date, end_date,
+             total_one_md, plan_one_md, total_date, plan_date, report, plan_progress, real_progress, week,
+             parent, comment, contents, work_type, work_detail_type, work_division, real_start_date, real_end_date
+      from JOB 
+      where ORDER_ID = #{order_id} AND PROJECT_ID = #{project_id}
+   </select>
+    -->
+    
+   <select id="selectByOrderProjectId" resultMap="jobVO" parameterType="map">
+      select id as ID, project_id, order_id, manager, deep, name, start_date, end_date,
+             total_one_md, plan_one_md, total_date, plan_date, report, plan_progress, real_progress, week,
+             parent, comment, contents, work_type, work_detail_type, work_division, real_start_date, real_end_date
+      from JOB 
+      where ID = #{id} AND PROJECT_ID = #{project_id}
+   </select>
+   
+
+
+
+    <!-- 참여인력  Delete 대상 List 삭제하기 -->
+   <delete id="deleteMember" parameterType="list">
+      DELETE FROM JOB 
+      <where>
+         <foreach collection="list" item="item" separator="OR">
+              (MANAGER = #{item.manager} AND ORDER_ID = #{item.order_id})
+         </foreach>
+      </where>
+   </delete>
+   
+   <!-- 참여인력  Update 대상 List 갱신하기 -->
+   <update id="updateMember" parameterType="list">
+      <foreach collection="list" index="index" item="item" separator=";">
+        
+      </foreach>
+   </update>
+   
+   <!-- 프로젝트 별 실시간 주간보고서는 job의 상태가 진행중 또는 진행완료 이며, 실제 시작일 종료일이 이번주 월~금요일에 걸쳐있으면 뽑아온다.  -->
+   <select id="getJobByProjectId" resultMap="jobVO">
+    select *
+    from JOB j
+    LEFT JOIN PROJECT p
+    ON(j.PROJECT_ID=p.ID) 
+    LEFT JOIN USER U
+    ON(j.MANAGER=U.ID)
+    where j.project_id =#{project_id}
+    and j.week=1
+    AND
+   (
+   (j.REAL_START_DATE BETWEEN ( #{this_week_monday} )  AND ( #{next_week_saturday} ))
+    OR
+      (j.REAL_END_DATE BETWEEN  ( #{this_week_monday} ) AND ( #{next_week_saturday}   ))
+      OR
+  <![CDATA[(j.REAL_START_DATE   <  (#{this_week_monday}  )  AND j.REAL_END_DATE >( #{next_week_saturday} ))  ]]>
+   )
+
+    ORDER BY FIELD(U.rank, '사장','부사장','상무','이사','부장','차장','과장','대리','사원','미정')ASC ,U.NAME,p.project_title,j.real_start_date
+   </select>
+  
+   <!-- 상위작업의 id로 하위작업 리스트 가져오기 -->
+   
+</mapper>

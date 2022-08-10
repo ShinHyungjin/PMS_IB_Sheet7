@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ibs.com.mapper.UserMapper">
+
+
+	<resultMap type="ibs.com.domain.UserVO" id="userVO">
+		<id property="id" column="id"/>
+		<result property="id" column="id"/>
+		<result property="password" column="password"/>
+		<result property="name" column="name"/>
+		<result property="cname" column="cname"/>
+		<result property="email" column="email"/>
+		<result property="phone" column="phone"/>
+		<result property="department" column="department"/>
+		<result property="rank" column="rank"/>
+		<result property="type" column="type"/>
+		<collection property="authList" resultMap="authMap"/>
+	</resultMap>
+	
+  	<resultMap id="authMap" type="ibs.com.domain.AuthVO" >
+		<result property="id" column="id"/>	
+		<result property="authority" column="authority"/>
+	</resultMap>  
+	
+	 <resultMap id="AuthVO" type="ibs.com.domain.AuthVO" >
+		<result property="id" column="id"/>	
+		<result property="authority" column="authority"/>
+	</resultMap>  
+	
+    <resultMap id="memberVO" type="ibs.com.domain.MemberVO" >
+			<result property="id" column="id"/>
+		    <result property="project_id" column="project_id"/>
+		    <result property="user_id" column="user_id"/>
+			<result property="group_id" column="group_id"/>
+	</resultMap>
+	
+	<resultMap id="commonVO" type="ibs.com.domain.CommonVO" >
+			<result property="id" column="id"/>
+		    <result property="name" column="name"/>
+	</resultMap>
+	
+<select id="selectCommon" resultMap="commonVO">
+	SELECT * FROM COMMON
+</select>
+
+<!-- ======================================주영=============================================== -->
+<!-- //job테이블에 어느 정보도 등록되지있지 않는 나의 부서 사람들 출력하기 -->
+<select id="getDeptMemberNotInJob" resultMap="userVO">
+SELECT RU.ID FROM
+	USER RU
+	WHERE
+	RU.ID NOT IN (
+	SELECT J.MANAGER
+	FROM JOB J left join PROJECT P on (J.PROJECT_ID =P.ID) LEFT JOIN USER U ON (J.MANAGER=U.ID)
+	WHERE J.WEEK=1 and J.MANAGER IS NOT NULL AND
+		(
+		(J.REAL_START_DATE BETWEEN ( '2021-11-15' ) AND ('2021-11-27'))
+		or (J.REAL_END_DATE BETWEEN ( '2021-11-15' ) AND ('2021-11-27')
+		)
+		or
+		<![CDATA[ (J.REAL_START_DATE < ('2021-11-15' ) AND J.REAL_END_DATE >( '2021-11-27' ) ) ]]>
+		)
+	)
+	AND RU.DEPARTMENT=#{department} and RU.TYPE=1
+	ORDER BY FIELD(RU.rank, '사장','부사장','상무','이사','부장','차장','과장','대리','사원','관리자')ASC, RU.name asc
+	
+</select>
+<!-- 내가 참여중인 프로젝트의 id로 검색하여 job에 등록되지 않는 나의 프로젝트 멤버들 출력하기 -->
+<select id="getProjectMemberNotInJob" resultMap="memberVO">
+           SELECT PM.USER_ID FROM PROJECT_MEMBER PM
+      WHERE
+      PM.USER_ID NOT IN (
+       select j.MANAGER 
+    from JOB j
+    LEFT JOIN PROJECT p
+    ON(j.PROJECT_ID=p.ID) 
+    LEFT JOIN USER U
+    ON(j.MANAGER=U.ID)
+    where j.project_id =#{project_id}
+    and j.week=1
+    AND
+   (j.REAL_START_DATE BETWEEN (#{this_week_monday})  AND ( #{next_week_saturday} ))
+   
+   ) AND PM.PROJECT_ID=#{project_id}
+</select>
+
+
+	<!--  부서코드로 부서이름 가져오기 -->
+	<select id="getMyDeptNameByCode" resultType="String">
+	select name from COMMON where ID=#{department}
+	</select>
+
+
+<select id="selectAllUserInfoExceptThisProjectMemeber" resultMap="userVO">
+select * from USER U where id NOT IN (                   
+select user_id from PROJECT_MEMBER pm where pm.PROJECT_ID=#{project_id}) AND U.TYPE=1 
+ORDER BY FIELD(U.rank, '사장','부사장','상무','이사','부장','차장','과장','대리','사원','미정','관리자')ASC, U.NAME ASC   
+</select>
+
+<select id="selectAllUserInfoExceptThisProjectMemeberByDepartment" resultMap="userVO">
+ select * from USER U where id NOT IN (                   
+	select user_id from PROJECT_MEMBER pm, USER U where pm.PROJECT_ID=#{project_id}) AND U.TYPE=1
+	<if test="department !='' ||department != null">
+	and U.DEPARTMENT=#{department}
+	ORDER BY FIELD(U.rank, '사장','부사장','상무','이사','부장','차장','과장','대리','사원','미정', '관리자')ASC, U.NAME ASC
+</if>
+</select>
+
+<select id="resultToSearchByDeptAndNameNotInProject" resultMap="userVO">
+ select * from USER U where id NOT IN (                   
+	select user_id from PROJECT_MEMBER pm, USER U where pm.PROJECT_ID=#{project_id}) AND U.TYPE=1
+	<choose>
+	<when test='department neq null and department neq ""'>
+	and U.DEPARTMENT=#{department}
+	</when>
+	<when test='name neq null and name neq ""'>
+	AND U.NAME=#{name}
+	</when>
+	</choose>
+	ORDER BY FIELD(U.rank, '사장','부사장','상무','이사','부장','차장','과장','대리','사원','미정','관리자')ASC, U.NAME ASC
+</select>
+
+<insert id="insertInfo" parameterType="menuAuthorityVO">
+	insert into COMMON(MENU_ID,P_CHECK,USERID,AUTHORITY)
+ 	values(#{menu_id},#{p_check},#{userid},0)
+</insert>
+
+<select id="selectUserInfo">
+	select *
+	from USER
+	where id=#{id} and password=#{password}
+</select>
+
+<select id="selectUserById" resultMap="userVO">
+	select u.id, u.password, u.NAME, u.EMAIL, u.PHONE, u.rank, u.department,a.authority, u.type
+	from USER u left join AUTHORITY a on u.id=a.id
+	where u.id=#{id}
+</select>
+
+<select id="selectUserIdByName" resultType="String">
+	select id from USER where NAME=#{name}
+</select>
+
+<select id="selectUserName" resultMap="userVO">
+	select name, id from USER where id=#{id} ORDER BY FIELD(rank, '사장','부사장','상무','이사','부장','차장','과장','대리','사원','관리자')ASC, name asc
+</select>
+
+
+<select id="selectUserInfoById" resultMap="userVO" parameterType="string">
+	select id,password,name,email,phone,department,rank from USER where id=#{id}
+</select>
+
+
+<select id="selectAllUserInfo" resultMap="userVO">
+	select USER.ID as id, USER.NAME as name, USER.RANK as rank, COMMON.NAME as cname  
+	from USER,COMMON where (USER.DEPARTMENT = COMMON.ID)
+	ORDER BY USER.DEPARTMENT ASC, FIELD( USER.rank, '사장','부사장','상무','이사','부장','차장','과장','대리','사원','관리자')ASC, COMMON.name asc
+</select>
+
+
+
+
+<!-- ======================================슬희=============================================== -->
+<!-- 아이디 중복확인 -->
+ <select id="idChk" resultType="int">
+     SELECT COUNT(*) FROM USER
+     WHERE id = #{id}
+</select>
+
+<!-- 회원가입 -->
+<insert id="insert" parameterType="userVO">
+	INSERT INTO USER (ID, PASSWORD, NAME, EMAIL, PHONE, DEPARTMENT, RANK, TYPE)
+	VALUES (#{id}, #{password}, #{name}, #{email}, #{phone}, #{department}, #{rank}, '0')
+</insert>
+
+<!-- 회원가입시 권한 부여 -->
+<insert id="insertAuth">
+	INSERT INTO AUTHORITY (ID, AUTHORITY) VALUES (#{id}, 'ROLE_MEMBER')
+</insert>
+
+<!-- 개인정보 수정 -->
+<update id="modify">
+	UPDATE USER SET
+	PASSWORD = #{password},
+	EMAIL = #{email},
+	PHONE = #{phone},
+	DEPARTMENT = #{department},
+	RANK =#{rank}
+	WHERE ID = #{id}
+</update>
+
+
+<!-- 모든 유저 정보 가져오기 -->
+ <select id="admin" resultMap="userVO">
+	select authority  from USER,AUTHORITY 
+	where USER.id=AUTHORITY.id
+	
+</select>
+
+<!-- 가입승인시 권한수정  -->
+<update id="checkAuth">
+	UPDATE AUTHORITY SET
+	AUTHORITY = #{authority}
+	WHERE ID = #{id}
+</update> 
+
+<select id="adminAuth" resultMap="userVO">
+	select authority from AUTHORITY
+	WHERE id = #{userid}
+</select> 
+
+
+<update id="resetPassword" parameterType="list">
+	<foreach collection="list" index="index" item="item" separator=";">
+		UPDATE USER
+		SET PASSWORD = '$2a$05$UnCxQphzDa0r1pFs9G2dKOC3WBTLJPiv0oaTOtq.ibxqFHagNwYMO'
+		WHERE ID = #{item.id}
+	</foreach>
+</update>
+
+
+<select id="selectUserListByDeptAndName" resultMap="userVO">
+	SELECT * FROM USER WHERE DEPARTMENT = #{department} AND NAME = #{name}
+</select>
+
+
+<!-- 삭제 사용자 처리 -->
+<update id="permitionDelectSubmit" parameterType="list">
+      <foreach collection="list" index="index" item="item" separator=";">
+         UPDATE USER u, AUTHORITY a 
+         SET u.TYPE =2,
+         a.authority = 'ROLE_MEMBER'
+         WHERE u.ID =#{item.id} and a.ID = #{item.id} 
+      </foreach>
+</update>
+
+<!-- 삭제 사용자 되돌리기 -->
+<update id="permitionRollbackSubmit" parameterType="list">
+      <foreach collection="list" index="index" item="item" separator=";">
+         UPDATE USER u, AUTHORITY a 
+         SET u.TYPE =1,
+         a.authority = 'ROLE_USER'
+         WHERE u.ID =#{item.id} and a.ID = #{item.id} 
+      </foreach>
+</update>
+
+<!-- 삭제된 모든 유저정보 가져오기 -->
+<select id="selectAllDelUser" resultMap="userVO">
+	select * from 
+	USER,AUTHORITY 
+	where USER.id=AUTHORITY.id and USER.type = 2
+	ORDER BY FIELD(rank, '사장','부사장','상무','이사','부장','차장','과장','대리','사원','미정','관리자')ASC, NAME ASC
+</select>
+
+
+
+
+<!-- ======================================형진=============================================== -->
+
+<!-- 가입된 모든 유저정보 가져오기 -->
+<select id="selectAllPermittedUser" resultMap="userVO">
+	select * from 
+	USER,AUTHORITY 
+	where USER.id=AUTHORITY.id and USER.type = 1
+	ORDER BY FIELD(rank, '사장','부사장','상무','이사','부장','차장','과장','대리','사원','미정','관리자')ASC, NAME ASC
+</select>
+
+
+<!-- 가입안된 모든 유저정보 가져오기 -->
+<select id="selectAllUnpermittedUser" resultMap="userVO">
+	select * from 
+	USER,AUTHORITY 
+	where USER.id=AUTHORITY.id and USER.type = 0
+	ORDER BY FIELD(rank, '사장','부사장','상무','이사','부장','차장','과장','대리','사원','미정','관리자')ASC, NAME ASC
+</select>
+
+
+<!-- 가입중 모든 유저정보 가져오기 -->
+<select id="selectDelectUser" resultMap="userVO">
+	select * from 
+	USER,AUTHORITY 
+	where USER.id=AUTHORITY.id and USER.type = 1
+	ORDER BY FIELD(rank, '사장','부사장','상무','이사','부장','차장','과장','대리','사원','미정','관리자')ASC, NAME ASC
+</select>
+
+<!-- 부서별 유저 정보 가져오기 -->
+ <select id="selectUserByDept" resultMap="userVO" parameterType="int">
+	select *
+	from USER,AUTHORITY
+	where department = #{department} and USER.id = AUTHORITY.id and USER.type = 1
+	ORDER BY FIELD(rank, '사장','부사장','상무','이사','부장','차장','과장','대리','사원','미정','관리자')ASC, NAME ASC
+</select>
+
+<!-- 관리자의 유저 정보 수정하기 -->
+<update id="updateUserInfo" parameterType="userVO">
+	UPDATE USER u, AUTHORITY a 
+	SET u.rank = #{rank},
+	u.department = #{department},
+	a.authority = <foreach collection="authList" item="authList">#{authList.authority}</foreach>
+	where u.id = #{id} and a.id = #{id}
+</update>
+
+
+<!-- 승인대기 사용자들의 승인처리 -->
+<update id="updatePermitionSave" parameterType="list">
+      <foreach collection="list" index="index" item="item" separator=";">
+         UPDATE USER u, AUTHORITY a 
+         SET u.TYPE =1,
+         a.authority = 'ROLE_USER'
+         WHERE u.ID =#{item.id} and a.ID = #{item.id} 
+      </foreach>
+</update>
+
+
+<!-- 유저 이름으로 사용자 검색 -->
+<select id="selectUserByName" resultMap="userVO" parameterType="String">
+	select *
+	from USER,AUTHORITY
+	where name = #{name} and USER.id = AUTHORITY.id and USER.type = 1
+</select>
+
+</mapper>

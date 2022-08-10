@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ibs.com.mapper.WeekReportMapper">
+
+<resultMap id="WeekReport" type="map">
+      <result property="id" column="id"/>
+      <result property="user_id" column="user_id"/>
+      <result property="project_id" column="project_id"/>
+      <result property="work_type" column="work_type" />
+      <result property="work_detail_type" column="work_detail_type" />
+      <result property="work_division" column="work_division" />
+      <result property="job_name" column="job_name"/>
+      <result property="job_id" column="job_id"/>
+      <result property="start_date" column="start_date" javaType="java.sql.Date" jdbcType="DATE"/>
+      <result property="end_date" column="end_date" javaType="java.sql.Date" jdbcType="DATE"/>
+      <result property="this_week_plan" column="this_week_plan" />
+      <result property="this_week_performence" column="this_week_performence" />
+      <result property="next_week_plan" column="next_week_plan" />
+      <result property="comment" column="comment" />
+      <result property="week_date" column="week_date" javaType="java.sql.Date" jdbcType="DATE"/>
+      <result property="department" column="department"/>
+      <result property="parent" column="parent"/>
+      <result property="contents" column="contents"/>
+      <result property="real_progress" column="real_progress"/>
+      <result property="name" column="name"/>
+      <result property="privacy_state" column="privacy_state"/>
+   </resultMap>
+   
+   <resultMap id="weekReportVO" type="ibs.com.domain.WeekReportVO">
+      <result property="id" column="id"/>
+      <result property="user_id" column="user_id"/>
+      <result property="project_id" column="project_id"/>
+      <result property="work_type" column="work_type" />
+      <result property="work_detail_type" column="work_detail_type" />
+      <result property="work_division" column="work_division" />
+      <result property="job_id" column="job_id"/>
+      <result property="start_date" column="start_date" javaType="java.sql.Date" jdbcType="DATE"/>
+      <result property="end_date" column="end_date" javaType="java.sql.Date" jdbcType="DATE"/>
+      <result property="this_week_plan" column="this_week_plan" />
+      <result property="this_week_performence" column="this_week_performence" />
+      <result property="next_week_plan" column="next_week_plan" />
+      <result property="comment" column="comment" />
+      <result property="week_date" column="week_date" javaType="java.sql.Date" jdbcType="DATE"/>
+      <result property="parent" column="parent"/>
+      <result property="comment" column="comment"/>
+      <result property="real_progress" column="real_progress"/>
+   </resultMap>
+   
+   <resultMap id="WeekReportProject" type="map">
+      <result property="id" column="id"/>
+      <result property="user_id" column="user_id"/>
+      <result property="project_id" column="project_id"/>
+      <result property="work_type" column="work_type" />
+      <result property="work_detail_type" column="work_detail_type" />
+      <result property="work_division" column="work_division" />
+      <result property="job_name" column="job_name"/>
+      <result property="job_id" column="job_id"/>
+      <result property="start_date" column="start_date" javaType="java.sql.Date" jdbcType="DATE"/>
+      <result property="end_date" column="end_date" javaType="java.sql.Date" jdbcType="DATE"/>
+      <result property="this_week_plan" column="this_week_plan" />
+      <result property="this_week_performence" column="this_week_performence" />
+      <result property="next_week_plan" column="next_week_plan" />
+      <result property="comment" column="comment" />
+      <result property="week_date" column="week_date" javaType="java.sql.Date" jdbcType="DATE"/>
+      <result property="parent" column="parent"/>
+      <result property="contents" column="contents"/>
+      <result property="real_progress" column="real_progress"/>
+      <result property="privacy_state" column="privacy_state"/>
+   </resultMap>
+   
+<resultMap id="jobVO" type="ibs.com.domain.JobVO">
+            <result property="id" column="id"/>
+            <result property="project_id" column="project_id"/>
+            <result property="job_id" column="job_id"/>
+             <result property="order_id" column="order_id"/>
+            <result property="privacy_state" column="privacy_state"/>
+            <result property="week" column="week"/>
+             <result property="deep" column="deep"/>  
+            <result property="name" column="name"/>
+            <result property="manager" column="manager"/>
+             <result property="report" column="report"/>  
+            <result property="work_type" column="work_type"/>
+            <result property="work_detail_type" column="work_detail_type"/>
+            <result property="work_division" column="work_division"/>
+            <result property="comment" column="comment"/>
+            <result property="contents" column="contents"/>
+            <result property="parent" column="parent"/>
+            <result property="start_date" column="start_date"  />
+            <result property="end_date" column="end_date" />
+            <result property="real_start_date" column="real_start_date"/>
+            <result property="real_end_date" column="real_end_date"/>
+            <result property="total_one_md" column="total_one_md"/>
+            <result property="plan_one_md" column="plan_one_md"/>
+            <result property="total_date" column="total_date"/>
+            <result property="plan_date" column="plan_date"/>
+            <result property="plan_progress" column="plan_progress"/>
+            <result property="real_progress" column="real_progress"/>
+            <result property="hide" column="hide"/>
+            <result property="sub_cnt" column="sub_cnt"/>
+            <result property="week_date" column="week_date"/>
+         <collection property="project" resultMap="projectVO" />
+         </resultMap>
+     <resultMap id="projectVO" type="ibs.com.domain.ProjectVO" >
+         <result property="p_id" column="id"/>
+          <result property="project_title" column="project_title"/>
+          <result property="project_nickname" column="project_nickname"/>
+         <result property="start_date" column="start_date"/>
+            <result property="end_date" column="end_date"/>
+          <result property="context" column="context"/>
+          <result property="manager" column="manager"/>
+   </resultMap>
+
+<!-- 팀원이지만 작업이 없는 사람들은 강제로 널값을 집어넣자 -->
+<insert id="insertEmptyMembersJobAtWeekReportTemp">
+insert into WEEK_REPORT_TEMP(PROJECT_ID, MANAGER, WEEK,WEEK_DATE)
+VALUES(#{project_id},#{user_id},1,#{week_date})
+</insert>
+
+<insert id="insertEmptyMembersJobAtWeekReport">
+insert into WEEK_REPORT(PROJECT_ID, MANAGER, WEEK,WEEK_DATE)
+VALUES(#{project_id},#{user_id},1,#{week_date})
+</insert>
+
+
+<!-- 과거 날짜 클릭시 나와 같은 부서 소속원들의 주간보고서 가져오기 -->
+   <select id="selectWeekReportDept" resultMap="WeekReport" parameterType="userVO">
+      select distinct(w.id), p.project_title as project_id, u.name as user_id, c.name as department, w.start_date, w.end_date,
+             w.comment, w.work_type, w.work_detail_type, w.work_division, w.week_date, w.this_week_plan, w.this_week_performence, w.next_week_plan,
+             j.name as job_name, w.parent as parent, j.id as job_id, w.contents, w.real_progress
+      from WEEK_REPORT w JOIN JOB j 
+      on w.job_id = j.id JOIN PROJECT p
+      on w.project_id = p.id JOIN USER u
+      on w.manager = u.id JOIN COMMON c
+      on u.department = c.id
+      where j.week = 1 and w.manager IN (select id from USER where department=#{department})
+      order by w.manager asc
+   </select>
+   
+   
+   <select id="selectWeekReportDeptAndDate" resultMap="WeekReport" parameterType="map">
+    SELECT DISTINCT W.JOB_ID AS JOB_ID,P.PROJECT_TITLE AS PROJECT_ID, W.NAME AS JOB_NAME, W.manager AS user_id, C.NAME AS DEPARTMENT, W.REAL_START_DATE as start_date ,W.REAL_END_DATE as end_date,
+     W.COMMENT, W.WORK_TYPE, W.WORK_DETAIL_TYPE ,W.WORK_DIVISION,W.WEEK_DATE, W.THIS_WEEK_PLAN, W.THIS_WEEK_PERFORMENCE, W.NEXT_WEEK_PLAN,W.PARENT AS PARENT, W.CONTENTS, W.REAL_PROGRESS,W.PRIVACY_STATE, U.NAME AS name 
+     FROM WEEK_REPORT W LEFT JOIN  PROJECT P ON (W.PROJECT_ID=P.ID) LEFT JOIN USER U ON(U.ID=W.user_id) LEFT JOIN COMMON C ON(U.DEPARTMENT=C.ID) WHERE W.WEEK_DATE = #{week_date} AND U.DEPARTMENT=#{department}
+     ORDER BY FIELD(U.rank, '사장','부사장','상무','이사','부장','차장','과장','대리','사원','미정')ASC,U.NAME, P.PROJECT_TITLE,W.REAL_START_DATE
+   </select>
+   
+   
+ <!-- 이번주 날짜 클릭시 -->
+<!--  <select id="selectNowWeekReportTempDept" resultMap="WeekReport" parameterType="userVO">
+         select (w.id), p.project_title as project_id, u.name as user_id, c.name as department, w.start_date, w.end_date,
+             w.comment, w.work_type, w.work_detail_type, w.work_division, w.week_date, w.this_week_plan, w.this_week_performence, w.next_week_plan,
+            w.parent as parent, w.contents, w.real_progress
+      from WEEK_REPORT_TEMP w JOIN PROJECT p
+      on w.project_id = p.id JOIN USER u
+      on w.manager = u.id JOIN COMMON c
+      on u.department = c.id
+      where w.week = 1 and w.manager IN (select id from USER where department=#{department})
+      order by w.manager asc
+ </select>  -->
+ 
+    <!-- 내부서의 주간보고서를 실시간으로 출력할때 job의 상태가 진행중 또는 진행완료이어야 하며, 실제 시작일, 종료일이 이번주 월~금 사이에 걸쳐있으면 뽑아온다. -->
+   <select id="getMyDeptWeekReportAtJob" resultMap="jobVO">
+  
+ SELECT *, NOW() AS WEEK_DATE
+   FROM JOB J left join PROJECT P on (J.PROJECT_ID =P.ID)  LEFT JOIN USER U ON (J.MANAGER=U.ID)
+   WHERE J.WEEK=1  and J.MANAGER IS NOT NULL  AND 
+   (
+   	 (
+      (J.REAL_START_DATE BETWEEN  ( #{this_week_monday} )  AND ( #{next_week_saturday} ) )
+ 	  OR
+  	 (J.REAL_END_DATE BETWEEN  ( #{this_week_monday} ) AND ( #{next_week_saturday} ) )
+  	 )
+  		
+  	 OR
+  ( J.REAL_START_DATE <![CDATA[  < ]]>( #{this_week_monday}  )  AND J.REAL_END_DATE<![CDATA[ >]]> ( #{next_week_saturday} )   )
+   )
+   
+   AND U.DEPARTMENT=#{department} and U.TYPE=1
+   ORDER BY FIELD(U.rank, '사장','부사장','상무','이사','부장','차장','과장','대리','사원','미정')ASC, U.NAME,P.PROJECT_TITLE,J.REAL_START_DATE
+   </select>
+ 
+ 
+  <!-- 이번주 날짜 클릭시 부서별(리펙토링 쿼리) -->
+  <select id="selectNowWeekReportTempDept" resultMap="WeekReport" parameterType="userVO">
+      SELECT P.PROJECT_TITLE AS PROJECT_ID,W.NAME AS JOB_NAME, W.MANAGER AS USER_ID, C.NAME AS DEPARTMENT, W.REAL_START_DATE as start_date ,W.REAL_END_DATE as end_date ,W.COMMENT, W.WORK_TYPE, W.WORK_DETAIL_TYPE 
+      ,W.WORK_DIVISION,W.WEEK_DATE, W.THIS_WEEK_PLAN, W.THIS_WEEK_PERFORMENCE, W.NEXT_WEEK_PLAN,W.PARENT AS PARENT, W.CONTENTS, W.REAL_PROGRESS, U.NAME AS name
+      FROM WEEK_REPORT_TEMP W LEFT JOIN JOB J
+      on(JOB_ID=J.ID) LEFT JOIN USER U ON (W.MANAGER=U.ID) LEFT JOIN COMMON C ON (U.DEPARTMENT=C.ID) LEFT JOIN PROJECT P ON (W.PROJECT_ID=P.ID) WHERE W.MANAGER IN (select id from USER WHERE department=#{department})
+      ORDER BY USER_ID
+ </select>
+ <!-- 이번주 날짜 클릭시 프로젝트별(리펙토링 쿼리) -->
+    <select id="selectNowWeekReportTempProject" resultMap="WeekReport" parameterType="userVO">
+    SELECT P.PROJECT_TITLE AS PROJECT_ID,W.NAME AS JOB_NAME, W.MANAGER AS USER_ID, C.NAME AS DEPARTMENT, W.REAL_START_DATE as start_date ,W.REAL_END_DATE as end_date ,W.COMMENT, W.WORK_TYPE, W.WORK_DETAIL_TYPE 
+      ,W.WORK_DIVISION,W.WEEK_DATE, W.THIS_WEEK_PLAN, W.THIS_WEEK_PERFORMENCE, W.NEXT_WEEK_PLAN,W.PARENT AS PARENT, W.CONTENTS, W.REAL_PROGRESS, U.NAME AS name, J.ID
+      FROM WEEK_REPORT_TEMP W LEFT JOIN JOB J
+      on(JOB_ID=J.ID) LEFT JOIN USER U ON (W.MANAGER=U.ID) LEFT JOIN COMMON C ON (U.DEPARTMENT=C.ID) LEFT JOIN PROJECT P ON (W.PROJECT_ID=P.ID) WHERE W.PROJECT_ID IN (SELECT PROJECT_ID FROM PROJECT_MEMBER WHERE USER_ID=#{id}) 
+      ORDER BY PROJECT_ID
+  </select>
+   
+   <!-- 과거: 나와 같은 프로젝트를 진행한 사용자들의 주간보고서 가져오기 -->
+   <select id="selectWeekReportProject" resultMap="WeekReportProject" parameterType="list"> 
+            select distinct(w.id), p.project_title as project_id, u.name as user_id, w.REAL_START_DATE AS start_date, w.REAL_END_DATE AS end_date,
+                w.comment AS comment, w.work_type AS work_type, w.work_detail_type AS work_detail_type, w.work_division AS work_division, w.week_date AS week_date,
+                w.this_week_plan AS this_week_plan, w.this_week_performence AS this_week_performence, w.next_week_plan AS next_week_plan,
+                w.name as job_name, w.privacy_state as privacy_state, w.parent as parent, w.JOB_ID as job_id, w.contents AS contents, w.real_progress AS real_progress
+       from WEEK_REPORT w JOIN PROJECT p
+               on w.project_id = p.id JOIN USER u
+               on w.user_id = u.id
+      		 where p.ID =#{project_id} AND w.WEEK_DATE=#{week_date}
+      		   ORDER BY FIELD(u.rank, '사장','부사장','상무','이사','부장','차장','과장','대리','사원')ASC, u.name asc, p.PROJECT_TITLE, w.REAL_START_DATE
+   </select>
+   
+      <!--현재: 나와 같은 프로젝트를 진행한 사용자들의 주간보고서 가져오기 -->
+   <select id="selectNowWeekReportProject" resultMap="WeekReportProject" parameterType="list">
+         select distinct(w.id), p.project_title as project_id, u.name as user_id, w.start_date, w.end_date,
+                w.comment, w.work_type, w.work_detail_type, w.work_division, w.week_date, w.this_week_plan, w.this_week_performence, w.next_week_plan,
+                j.name as job_name, w.parent as parent, j.id as job_id, w.contents, w.real_progress
+       from WEEK_REPORT_TEMP w JOIN PROJECT p
+               on w.project_id = p.id JOIN JOB j
+               on w.job_id = j.id JOIN USER u
+               on w.manager = u.id
+       where j.week = 1 and j.project_id in <foreach collection="list" item="item" index="index" open='(' close=')' separator="," >
+               #{item}
+            </foreach> and <![CDATA[w.end_date>=now()]]>
+        ORDER BY FIELD(u.rank, '사장','부사장','상무','이사','부장','차장','과장','대리','사원')ASC, u.name asc,p.PROJECT_TITLE, j.REAL_START_DATE
+   </select>
+   
+   
+   
+   <!-- 내가 소속된 프로젝트 리스트 가져오기 -->
+   <select id="getMyProjectIdList" parameterType="userVO" resultType="int">
+         select project_id
+         from PROJECT_MEMBER
+         where user_id = #{id}
+   </select>
+   
+   <!-- 주간보고서 뽑기 -->
+   <select id="getAllWeekReport" resultMap="jobVO">
+         	SELECT *
+	FROM JOB J left join PROJECT P on (J.PROJECT_ID =P.ID) 
+	WHERE J.WEEK=1 and J.MANAGER IS NOT NULL AND (
+      (J.REAL_START_DATE BETWEEN  ( #{this_week_monday} )  AND ( #{next_week_saturday} ) )
+ 	  OR
+  	 (J.REAL_END_DATE BETWEEN  ( #{this_week_monday}  ) AND (#{next_week_saturday}) )
+  	  	 OR
+ <![CDATA[  ( J.REAL_START_DATE  < ( #{this_week_monday}  )  AND J.REAL_END_DATE >]]> ( #{next_week_saturday} )   )
+   )
+
+   </select>
+   
+
+   
+      <select id="getAllWeekReport1" resultMap="jobVO">
+      SELECT J.START_DATE,J.END_DATE
+   FROM JOB J left join PROJECT P on (J.PROJECT_ID =P.ID) 
+   WHERE J.WEEK=1 and J.MANAGER IS NOT NULL and (J.PRIVACY_STATE=111 OR J.PRIVACY_STATE=112)
+   </select>
+   
+   
+   <insert id="insertJobToWeekReport" >
+      insert into WEEK_REPORT(user_id,week, privacy_state, real_start_date, real_end_date, manager, project_id, work_type, work_detail_type, work_division, job_id, start_date, end_date, comment, contents, real_progress, week_date,
+      this_week_plan, this_week_performence, next_week_plan, parent,deep,order_id,hide,report,name,total_date,total_one_md,plan_date,plan_one_md,plan_progress)
+      VALUES(#{user_id}, #{week}, #{privacy_state}, #{real_start_date}, #{real_end_date}, #{manager},#{project_id},#{work_type},#{work_detail_type},#{work_division},#{job_id},#{start_date},#{end_date},#{comment},#{contents},#{real_progress},#{week_date},
+      #{this_week_plan}, #{this_week_performence}, #{next_week_plan},#{parent},#{deep},#{order_id},#{hide},#{report},#{name},#{total_date},#{total_one_md},#{plan_date},#{plan_one_md},#{plan_progress})
+   </insert>
+   
+   
+     <insert id="insertJobToWeekReportTemp" >
+      insert into WEEK_REPORT_TEMP(week, privacy_state, real_start_date, real_end_date, manager, project_id, work_type, work_detail_type, work_division, job_id, start_date, end_date, comment, contents, real_progress, week_date,
+      this_week_plan, this_week_performence, next_week_plan, parent,deep,order_id,hide,report,name,total_date,total_one_md,plan_date,plan_one_md,plan_progress)
+      VALUES(#{week}, #{privacy_state}, #{real_start_date}, #{real_end_date}, #{manager},#{project_id},#{work_type},#{work_detail_type},#{work_division},#{job_id},#{start_date},#{end_date},#{comment},#{contents},#{real_progress},#{week_date},
+      #{this_week_plan}, #{this_week_performence}, #{next_week_plan},#{parent},#{deep},#{order_id},#{hide},#{report},#{name},#{total_date},#{total_one_md},#{plan_date},#{plan_one_md},#{plan_progress})
+   </insert>
+   
+   <delete id="deleteAllForRealTimeWeekReport">
+   delete from WEEK_REPORT_TEMP
+   </delete>
+
+</mapper>

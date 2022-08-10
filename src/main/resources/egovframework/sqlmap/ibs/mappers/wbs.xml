@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ibs.com.mapper.WbsMapper">
+
+<!-- WBS 반환 타입 -->
+<resultMap type="map" id="wbsVO">
+   <result property="id" column="id"/>
+   <result property="row_index" column="row_index"/>
+   <result property="name" column="name"/>
+   <result property="start_date" column="start_date"/>
+   <result property="real_start_date" column="real_start_date"/>
+   <result property="end_date" column="end_date"/>
+   <result property="real_end_date" column="real_end_date"/>
+   <result property="total_one_md" column="total_one_md"/>
+   <result property="total_date" column="total_date"/>
+   <result property="order_id" column="order_id"/>
+   <result property="deep" column="deep"/>
+   <result property="report" column="report"/>
+   <result property="project_id" column="project_id"/>
+   <result property="wbs_total_real_progress" column="wbs_total_real_progress"/>
+   <result property="job_total_real_progress" column="job_total_real_progress"/>
+   <result property="manager" column="manager"/>
+   <result property="manager_id" column="manager_id"/>
+</resultMap>
+
+<!-- JOB 반환 타입 -->
+<resultMap id="Job" type="map">
+      <result property="id" column="id"/>
+      <result property="project_id" column="project_id"/>
+      <result property="manager" column="manager" />
+      <result property="name" column="name" />
+      <result property="start_date" column="start_date" javaType="java.sql.Date" jdbcType="DATE"/>
+      <result property="end_date" column="end_date" javaType="java.sql.Date" jdbcType="DATE"/>
+      <result property="real_progress" column="real_progress" javaType="Float" />
+      <result property="parent" column="parent" />
+      <result property="comment" column="comment" />
+      <result property="contents" column="contents" />
+      <result property="work_type" column="work_type" />
+      <result property="work_detail_type" column="work_detail_type" />
+      <result property="work_division" column="work_division" />
+      <result property="real_start_date" column="real_start_date" javaType="java.sql.Date" jdbcType="DATE"/>
+      <result property="real_end_date" column="real_end_date" javaType="java.sql.Date" jdbcType="DATE"/>
+      <result property="wbs_id" column="wbs_id"/>
+ </resultMap>
+
+<!-- ========== WBS CRUD ==========-->
+<!-- WBS SELECTE -->
+<select id="selectByProjectId" resultMap="wbsVO" parameterType="int">
+   SELECT W.ID, W.ROW_INDEX, W.NAME, W.START_DATE, W.END_DATE,
+               W.TOTAL_ONE_MD,
+               W.TOTAL_DATE,
+               MIN(J.REAL_START_DATE) AS REAL_START_DATE,
+               MAX(J.REAL_END_DATE) AS REAL_END_DATE,
+               W.TOTAL_REAL_PROGRESS AS WBS_TOTAL_REAL_PROGRESS,
+               AVG(J.REAL_PROGRESS) AS JOB_TOTAL_REAL_PROGRESS,
+               GROUP_CONCAT((SELECT NAME FROM USER WHERE ID = J.MANAGER) ORDER BY J.MANAGER DESC SEPARATOR ',') AS MANAGER,
+               GROUP_CONCAT(J.MANAGER ORDER BY J.MANAGER DESC SEPARATOR ',') AS MANAGER_ID,
+               W.ORDER_ID, W.DEEP, W.REPORT, W.PROJECT_ID
+   FROM WBS W LEFT JOIN JOB J
+   ON W.ID IS NOT NULL AND (CASE WHEN J.MANAGER IS NOT NULL THEN J.WBS_ID = W.ID AND J.PARENT = 0 END)
+   WHERE W.PROJECT_ID = #{projectId}
+   GROUP BY W.ID
+   ORDER BY W.ROW_INDEX
+</select>
+
+<!-- WBS INSERT -->
+<insert id="insertWbsList" parameterType="list" useGeneratedKeys="true" keyProperty="id">
+      INSERT INTO WBS(ORDER_ID, ROW_INDEX, PROJECT_ID, NAME, DEEP, START_DATE, END_DATE, REPORT, TOTAL_DATE, TOTAL_ONE_MD, TOTAL_REAL_PROGRESS)
+      VALUES
+       <foreach collection="list" item="item" separator="," >
+             (#{item.order_id}, #{item.row_index}, #{item.project_id}, #{item.name}, #{item.deep}, #{item.start_date}, #{item.end_date}, #{item.report},
+                #{item.total_date}, #{item.total_one_md}, #{item.total_real_progress})
+      </foreach>
+      <selectKey keyProperty="id" resultType="int" order="AFTER">
+            SELECT LAST_INSERT_ID();
+      </selectKey>
+</insert>
+
+<!-- WBS UPDATE -->
+<update id="updateWbsList" parameterType="list">
+      <foreach collection="list" index="index" item="item" separator=";">
+         UPDATE WBS
+         SET DEEP =#{item.deep}
+            , NAME = #{item.name}
+            , ORDER_ID =#{item.order_id}
+            , ROW_INDEX = #{item.row_index}
+            , START_DATE =#{item.start_date}
+            , END_DATE =#{item.end_date}
+            , REPORT =#{item.report}
+            , TOTAL_DATE =#{item.total_date}
+            , TOTAL_ONE_MD = #{item.total_one_md}
+            , TOTAL_REAL_PROGRESS = #{item.total_real_progress}
+            WHERE ID =#{item.id}
+      </foreach>
+</update>
+
+<!-- WBS DELETE -->
+<delete id="deleteWbsList" parameterType="list">
+      DELETE FROM WBS 
+      <where>
+         <foreach collection="list" item="item" separator="OR">
+              (ID = #{item.id})
+         </foreach>
+      </where>
+</delete>
+
+<!-- WBS SELECT Last ID (나중에 쓸 수도 있어서 남겨둠) -->
+<select id="selectWbsLastId" resultType="int">
+   SELECT MAX(ID) AS ID FROM WBS
+</select>
+
+<!-- ========== 강한 링크를 갖는 JOB CRUD ==========-->
+<!-- JOB SELECT -->
+<select id="selectJobByWbsId" resultMap="Job" parameterType="int">
+   SELECT ID, MANAGER, PROJECT_ID, WBS_ID
+   FROM JOB
+   WHERE WBS_ID = #{WBS_ID}
+</select>
+
+<!-- JOB INSERT -->
+<insert id="insertJobList" parameterType="list">
+      INSERT INTO JOB(WBS_ID, REAL_START_DATE, REAL_END_DATE, PROJECT_ID, MANAGER, WEEK, NAME, REPORT, PRIVACY_STATE)
+      VALUES
+       <foreach collection="list" item="item" separator="," >
+             (#{item.wbs_id}, #{item.real_start_date}, #{item.real_end_date}, 
+             #{item.project_id}, #{item.manager}, #{item.week},#{item.name}, #{item.report}, #{item.privacy_state})
+      </foreach>
+</insert>
+
+<!-- JOB UPDATE -->
+<update id="updateJobList" parameterType="list">
+      <foreach collection="list" index="index" item="item" separator=";">
+         UPDATE JOB
+         SET NAME =#{item.name}
+            , REPORT =#{item.report}
+            WHERE ID =#{item.id}
+      </foreach>
+</update>
+
+<!-- JOB DELETE -->
+<delete id="deleteJobList" parameterType="list">
+      DELETE FROM JOB 
+      <where>
+         <foreach collection="list" item="item" separator="OR">
+              (ID = #{item.id} AND (WBS_ID = #{item.wbs_id} OR PARENT =#{item.wbs_id}))
+         </foreach>
+      </where>
+</delete>
+</mapper>

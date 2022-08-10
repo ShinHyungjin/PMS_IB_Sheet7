@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ibs.com.mapper.ProjectMapper">
+<resultMap id="projectVO" type="ibs.com.domain.ProjectVO" >
+         <result property="p_id" column="id"/>
+          <result property="project_title" column="project_title"/>
+          <result property="project_nickname" column="project_nickname"/>
+         <result property="start_date" column="start_date"/>
+            <result property="end_date" column="end_date"/>
+          <result property="context" column="context"/>
+          <result property="manager" column="manager"/>
+          <result property="name" column="name"/>
+</resultMap>
+
+<resultMap id="MemberVO" type="ibs.com.domain.MemberVO" >
+            <result property="id" column="id"/>
+            <result property="project_id" column="project_id"/>
+            <result property="user_id" column="user_id"/>
+            <result property="group_id" column="group_id"/>
+</resultMap>
+<!-- 프로젝트 참여중이지만 job에 어느 정보도 없는 유저 출력 -->
+ <select id="getProjectMemberNotInJob"  resultMap="MemberVO">
+    SELECT PM.USER_ID FROM PROJECT_MEMBER PM
+      WHERE
+      PM.USER_ID NOT IN (
+       select j.MANAGER 
+    from JOB j
+    LEFT JOIN PROJECT p
+    ON(j.PROJECT_ID=p.ID) 
+    LEFT JOIN USER U
+    ON(j.MANAGER=U.ID)
+    where j.project_id =#{project_id}
+    and j.week=1
+    AND
+     (
+   (
+   j.REAL_START_DATE BETWEEN (  #{this_week_monday})  AND ( #{next_week_saturday}) 
+   ) 
+   OR 
+    (j.REAL_END_DATE BETWEEN (  #{this_week_monday} )  AND ( #{next_week_saturday}) 
+    ) 
+   OR
+     (
+     j.REAL_START_DATE <![CDATA[  < ]]>( #{this_week_monday}  )  AND j.REAL_END_DATE<![CDATA[ >]]> ( #{next_week_saturday} ))
+   )
+   )
+    AND PM.PROJECT_ID=#{project_id}
+    
+</select>
+
+<!-- 프로젝트id로 프로젝트 이름 뽑기 -->
+<select id="getProjectNameByProjectId" resultType="String">
+select project_title from PROJECT WHERE ID=#{id}
+</select>
+<!-- 진행중인 프로젝트 id 가져오기 -->
+<select id="selectIngProject" resultMap="projectVO">
+SELECT id FROM PROJECT WHERE STATE=111
+</select>
+<!-- 진행중인 프로젝트의 참여자들 가져오기 -->
+<select id="selectIngProjectMember" resultMap="MemberVO">
+SELECT * FROM PROJECT_MEMBER pm WHERE pm.PROJECT_ID =#{project_id}
+ AND USER_ID NOT in(
+SELECT DISTINCT(manager) FROM JOB WHERE PROJECT_ID=#{project_id});
+</select>
+
+<select id="selectAllProject" resultMap="projectVO">
+   select ID, PROJECT_TITLE, PROJECT_NICKNAME, START_DATE, END_DATE, CONTEXT, STATE, MANAGER, (select name from USER WHERE ID=MANAGER)as NAME,TEAM, PAYMENT
+    from PROJECT
+     WHERE NOT(PROJECT_TITLE='기타')
+     <if test='title neq null and title neq ""'>
+      AND PROJECT_TITLE LIKE CONCAT('%',#{title},'%')
+     </if>
+     ORDER BY FIELD(STATE, 112, 111, 113, 110)ASC, PROJECT_TITLE ASC, START_DATE ASC;
+</select>
+
+<select id="selectProject" resultMap="projectVO">
+   select ID, PROJECT_TITLE, PROJECT_NICKNAME, START_DATE, END_DATE, CONTEXT, STATE, MANAGER, (select name from USER WHERE ID=MANAGER)as NAME,TEAM, PAYMENT
+    from PROJECT
+     WHERE NOT(PROJECT_TITLE='기타')
+     <if test='title neq null and title neq ""'>
+      AND PROJECT_TITLE LIKE CONCAT('%',#{project_title},'%')
+     </if>
+     ORDER BY FIELD(STATE, 112, 111, 113, 110)ASC, PROJECT_TITLE ASC, START_DATE ASC;
+</select>
+
+<select id="selectTeam" resultMap="projectVO" parameterType="int">
+	SELECT ID, PROJECT_TITLE, PROJECT_NICKNAME, START_DATE, END_DATE, CONTEXT, STATE, MANAGER, (select name from USER WHERE ID=MANAGER)as NAME,TEAM, PAYMENT
+	FROM PROJECT
+	WHERE NOT(PROJECT_TITLE='기타') AND TEAM = #{team}
+	ORDER BY FIELD(STATE, 112, 111, 113, 110)ASC, PROJECT_TITLE ASC, START_DATE ASC;
+</select>
+
+<select id="selectTitle" resultMap="projectVO" parameterType="String">
+	SELECT ID, PROJECT_TITLE, PROJECT_NICKNAME, START_DATE, END_DATE, CONTEXT, STATE, MANAGER, (select name from USER WHERE ID=MANAGER)as NAME,TEAM, PAYMENT
+	FROM PROJECT
+	WHERE NOT(PROJECT_TITLE='기타')
+    AND PROJECT_TITLE LIKE CONCAT('%',#{project_title},'%')
+    ORDER BY FIELD(STATE, 112, 111, 113, 110)ASC, PROJECT_TITLE ASC, START_DATE ASC;
+</select>
+
+<select id="selectTeamAndTitle" resultMap="projectVO">
+	SELECT ID, PROJECT_TITLE, PROJECT_NICKNAME, START_DATE, END_DATE, CONTEXT, STATE, MANAGER, (select name from USER WHERE ID=MANAGER)as NAME,TEAM, PAYMENT
+	FROM PROJECT 
+	WHERE NOT(PROJECT_TITLE='기타')
+    AND PROJECT_TITLE LIKE CONCAT('%',#{project_title},'%')
+	AND TEAM = #{team} 
+    ORDER BY FIELD(STATE, 112, 111, 113, 110)ASC, PROJECT_TITLE ASC, START_DATE ASC;
+</select>
+
+
+<update id="updateGroupIdByEachProject">
+ UPDATE PROJECT_MEMBER SET GROUP_ID =#{group_id}
+ WHERE PROJECT_ID=#{project_id} AND USER_ID =#{user_id}
+</update>
+
+<update id="updateProjectMemberAuth2To4">
+ UPDATE PROJECT_MEMBER SET GROUP_ID=4 WHERE GROUP_ID=2 AND PROJECT_ID=#{project_id} 
+</update>
+
+<update id="updateProjectPmByChangedPmAtIbsheet">
+   update PROJECT SET MANAGER=#{user_id} where ID=#{project_id}
+</update>
+
+<delete id="deleteMemberFromProject">
+delete from PROJECT_MEMBER where GROUP_ID =#{group_id} and PROJECT_ID=#{project_id} and USER_ID=#{user_id}
+</delete>
+   
+<insert id="insertProjectMemberByManager">
+insert into PROJECT_MEMBER(PROJECT_ID, USER_ID, GROUP_ID) VALUES(#{project_id},#{user_id},#{group_id})
+</insert>
+
+<!-- 형진 쿼리 -->
+<!-- 프로젝트 한 개 가져오기 -->
+<select id="selectByProjectId" parameterType="int" resultMap="projectVO">
+   SELECT * FROM PROJECT WHERE ID = #{PROJECT_ID}
+</select>
+</mapper>

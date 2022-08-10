@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+		
+
+<bean id="customAccessDenied" class="ibs.com.security.CustomAccessDeniedHandler"/>
+<bean id="customloginSuccess" class="ibs.com.security.CustomLoginSuccessHandler"/>
+<bean id="CustomAuthenticationProvider" class="ibs.com.security.CustomAuthenticationProvider"/>
+<bean id="CustomLoginFailed" class="ibs.com.security.CustomLoginFailedHandler"/>
+<bean id="CustomNoOpasswordEncoder" class="ibs.com.security.CustomNoOpasswordEncoder"/>
+<bean id="customUserDetailsService" class="ibs.com.security.CustomUserDetailsService" /> 
+		
+<security:http>
+	<security:headers>
+		<security:frame-options disabled="true"/>
+	</security:headers>
+<!-- default-target-url : 로그인 성공 시 이동 URL -->
+	<security:form-login login-page="/user/login" default-target-url="/job/list" authentication-failure-handler-ref="CustomLoginFailed" authentication-success-handler-ref="customloginSuccess"/>
+	<security:access-denied-handler ref="customAccessDenied"/>
+	<!-- spring security의 X-Frame-Option DENY 해제 설정 -->
+	<!-- remember-me 체크박스 선택하면 로그인 기억 기능 -->
+	<security:remember-me data-source-ref="dataSource" token-validity-seconds="86400" />
+	<!-- 로그아웃 처리와 LogoutSuccessHandler post 방식으로만 작동함  로그아웃시 자동로그인쿠기,was 발행 쿠기 삭제-->
+	<security:logout logout-url="/user/logout" invalidate-session="true" delete-cookies="remember-me, JSESSION_ID" logout-success-url="/user/login" />
+	<security:session-management invalid-session-url="/user/login"></security:session-management>
+	
+	<security:csrf disabled="true"/>
+	<security:session-management>
+		<security:concurrency-control max-sessions="1"/>
+	</security:session-management>
+</security:http>
+
+
+<!-- authentication-manager:사용자의 인증처리 -->
+<security:authentication-manager>
+	<security:authentication-provider ref="CustomAuthenticationProvider"/>
+	<security:authentication-provider user-service-ref="customUserDetailsService">
+		<security:password-encoder ref="CustomNoOpasswordEncoder" />
+	</security:authentication-provider>
+</security:authentication-manager>
+		
+		
+</beans>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ibs.com.mapper.MenuMapper">
+
+	<resultMap id="authority" type="ibs.com.domain.MenuAuthorityVO">
+		<result property="menu_id" column="menu_id"/>
+		<result property="permission_check" column="permission_check"/>
+		<result property="group_id" column="group_id"/>
+		<result property="user_id" column="user_id"/>
+		<result property="project_id" column="project_id"/>
+	</resultMap>
+
+
+	<insert id="insertInfo" >
+	insert into MENU_AUTHORITY(MENU_ID,PERMISSION_CHECK,GROUP_ID,PROJECT_ID) values(#{menu_id},#{permission_check},#{group_id},#{project_id});
+	</insert>
+	
+	<update id="updateMenuAuthByMyInfo">
+	update MENU_AUTHORITY set PERMISSION_CHECK=#{permission_check} where project_id=#{project_id} and group_id=#{group_id} and menu_id=#{menu_id}
+	</update>
+	
+<!-- 	<update id="updateInfo">
+	update MENU_AUTHORITY SET GROUP_ID=#{group_id}
+	</update>
+	 -->
+<!-- 	<delete id="deleteGroupAuthByManager" parameterType="menuAuthorityVO">
+	delete from MENU_AUTHORITY where GROUP_ID=(
+								select distinct(group_id) 
+								from PROJECT_MEMBER
+								WHERE PROJECT_ID=(
+												  SELECT id
+												  FROM PROJECT
+												  WHERE MANAGER=#{user_id}
+												 )
+								and group_id=#{group_id}
+								   )
+	</delete> -->
+	<delete id="deleteGroupAuthByManager">
+	delete from MENU_AUTHORITY where group_id=#{group_id} and project_id=#{project_id}
+	</delete>
+
+<!-- 	<select id="getGroupAuthByManager" resultType="menuAuthorityVO">
+				select menu_id,permission_check
+				from MENU_AUTHORITY
+				WHERE group_id=(
+								select distinct(group_id) 
+								from PROJECT_MEMBER
+								WHERE PROJECT_ID IN(
+												  SELECT id
+												  FROM PROJECT
+												  WHERE MANAGER=#{id}
+												 )
+								and group_id=#{group_id}
+								   )
+	</select> -->
+<select id="getGroupAuthByManager" resultType="int">
+		select count(*) from MENU_AUTHORITY where group_id=#{group_id} and project_id=#{project_id}
+</select>
+<select id="getGroupAuthByGroup"  resultMap="authority">
+	select * from MENU_AUTHORITY WHERE project_id=#{project_id} and GROUP_ID=#{group_id}
+</select>
+
+<select id="loginauth" resultMap="authority">
+	select * from MENU_AUTHORITY WHERE group_id=#{group_id} and project_id=#{project_id} and menu_id=#{menu_id}
+</select>
+
+<!-- <select id="loginauth2" resultType="Integer">
+	select PERMISSION_CHECK from MENU_AUTHORITY WHERE group_id=#{group_id} and project_id=#{project_id} and menu_id=#{menu_id}
+</select> -->
+
+<select id="getMyGroupId" resultType="int">
+	select group_id from PROJECT_MEMBER WHERE PROJECT_ID=#{project_id} AND USER_ID=#{user_id}
+</select>
+
+
+
+<select id="loginauth2" resultType="Integer">
+	select a.PERMISSION_CHECK from MENU_AUTHORITY a left join PROJECT_MEMBER m
+	on(a.PROJECT_ID=m.PROJECT_ID and a.GROUP_ID=m.GROUP_ID) WHERE a.PROJECT_ID=#{project_id} and a.MENU_ID=#{menu_id} and m.GROUP_ID=#{group_id} and m.USER_ID=#{user_id}
+</select>
+
+
+
+<!-- 주영 권한 처리 해결법 -->
+<select id="getWhatIsMyAuthForEachProject" resultMap="authority">
+	select * from MENU_AUTHORITY where GROUP_ID=(
+													select group_id
+													from PROJECT_MEMBER
+													WHERE USER_ID=#{user_id}
+													AND PROJECT_ID=#{project_id} 
+												) and project_id=#{project_id}
+</select>
+
+
+
+</mapper>

@@ -1,0 +1,40 @@
+@CHARSET "UTF-8";
+
+details>summary {
+      cursor: pointer;
+    }
+
+    details>summary>h5::before {
+      content: "\f067";
+      font-family: "Font Awesome 5 Free";
+   	  margin: 10px;
+   	  size : 1px;
+    }
+    
+    details>summary>h5>button {
+    margin-left: 10px;
+      height: 35px;
+    }
+
+    details[open]>summary>h5::before {
+      content: "\f068";
+      font-family: "Font Awesome 5 Free";
+   	  margin: 10px;
+   	  size : 1px;
+    }
+
+    details[open] summary~* {
+      animation: sweep 0.3s ease-in-out;
+    }
+
+    @keyframes sweep {
+      from {
+        opacity: 0;
+        margin-left: -10px;
+      }
+
+      to {
+        opacity: 1;
+        margin-left: 0px;
+      }
+    }
